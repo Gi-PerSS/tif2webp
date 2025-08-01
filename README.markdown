@@ -85,4 +85,4 @@ This script is provided under the MIT License. See the LICENSE file for details.
 
 ---
 
-[Читать на русском](#rREADME_RU.markdown)
+[Читать на русском](README_RU.markdown)
