@@ -8,7 +8,7 @@
    - С аргументом-каталогом: обрабатывает указанный каталог
    - С аргументом-TXT-файлом: обрабатывает каталоги из списка в файле
 2. Для каждого каталога:
-   - Создает соответствующий каталог с суффиксом _webp
+   - Создает соответствующий каталог с суффиксом _webp (или в указанной выходной директории)
    - Определяет TIFF-файлы, которые еще не конвертированы
    - Последовательно конвертирует файлы (1 поток для минимизации нагрузки на HDD)
 3. Сбор статистики:
@@ -113,11 +113,12 @@ def convert_to_webp(input_path, output_path):
         logger.error(f"Ошибка конвертации {input_path}: {str(e)}")
         return False, 0
 
-def process_directory(tiff_dir, force_convert=False):
+def process_directory(tiff_dir, output_root=None, force_convert=False):
     """Обработка каталога с TIFF-файлами
     
     Аргументы:
         tiff_dir: Путь к каталогу с TIFF-файлами
+        output_root: Корневая директория для сохранения (None для суффикса _webp)
         force_convert: Флаг принудительной конвертации всех файлов
         
     Возвращает:
@@ -128,8 +129,16 @@ def process_directory(tiff_dir, force_convert=False):
             total_orig: Суммарный размер исходных файлов (байты)
             total_compressed: Суммарный размер сконвертированных файлов (байты)
     """
-    # Создаем целевой каталог с суффиксом _webp
-    webp_dir = f"{tiff_dir}_webp"
+    # Определяем путь для сохранения
+    if output_root:
+        # Создаем путь в указанной выходной директории
+        base_name = os.path.basename(tiff_dir)
+        webp_dir = os.path.join(output_root, base_name)
+    else:
+        # Используем суффикс _webp рядом с исходным каталогом
+        webp_dir = f"{tiff_dir}_webp"
+    
+    # Создаем целевой каталог
     os.makedirs(webp_dir, exist_ok=True)
     
     # Получаем список TIFF-файлов
@@ -245,11 +254,24 @@ def main():
     # Парсинг аргументов командной строки
     args = parser.parse_args()
     
+    # Создаем выходную директорию, если она указана и не существует
+    if args.output_dir and not os.path.exists(args.output_dir):
+        try:
+            os.makedirs(args.output_dir, exist_ok=True)
+            logger.info(f"Создана выходная директория: {args.output_dir}")
+        except Exception as e:
+            logger.error(f"Ошибка создания выходной директории: {str(e)}")
+            sys.exit(1)
+    
     # Определение режима работы
     if args.target:
         if os.path.isdir(args.target):
             # Режим обработки одного каталога
-            count, time_spent, ratio, orig, comp = process_directory(args.target, True)
+            count, time_spent, ratio, orig, comp = process_directory(
+                args.target, 
+                output_root=args.output_dir,
+                force_convert=True
+            )
             total_files += count
             total_time += time_spent
             total_orig_size += orig
@@ -261,7 +283,11 @@ def main():
             
             for directory in directories:
                 if os.path.isdir(directory):
-                    count, time_spent, ratio, orig, comp = process_directory(directory)
+                    count, time_spent, ratio, orig, comp = process_directory(
+                        directory, 
+                        output_root=args.output_dir,
+                        force_convert=False
+                    )
                     total_files += count
                     total_time += time_spent
                     total_orig_size += orig
@@ -277,7 +303,11 @@ def main():
         tiff_dirs = find_tiff_dirs(os.getcwd())
         
         for directory in tiff_dirs:
-            count, time_spent, ratio, orig, comp = process_directory(directory)
+            count, time_spent, ratio, orig, comp = process_directory(
+                directory, 
+                output_root=args.output_dir,
+                force_convert=False
+            )
             total_files += count
             total_time += time_spent
             total_orig_size += orig
@@ -311,6 +341,12 @@ if __name__ == "__main__":
         nargs='?', 
         default=None, 
         help='Путь к каталогу для обработки или TXT-файлу со списком каталогов'
+    )
+    parser.add_argument(
+        '-o', '--output_dir',
+        type=str,
+        default=None,
+        help='Корневая директория для сохранения сконвертированных файлов'
     )
     
     # Инициализация логгера и запуск

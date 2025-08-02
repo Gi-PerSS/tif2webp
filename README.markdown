@@ -10,7 +10,7 @@ This script is designed for batch conversion of TIFF files to WebP Lossless form
   - Process directories listed in a provided TXT file.
 
 - **Conversion Logic**:
-  - Creates a corresponding `_webp` directory for each processed directory.
+  - Creates a corresponding directory for converted files, either with a `_webp` suffix next to the source directory or inside a specified output root directory.
   - Converts only TIFF files that haven't been converted yet (unless forced).
   - Uses a single-threaded approach to minimize HDD load.
 
@@ -27,6 +27,7 @@ This script is designed for batch conversion of TIFF files to WebP Lossless form
 - **No Arguments**: Scans the current directory for subdirectories containing TIFF files and processes them.
 - **Directory Path**: Processes the specified directory.
 - **TXT File Path**: Processes directories listed in the provided TXT file.
+- **-o, --output_dir**: Specifies the root directory where the converted files will be saved. If not provided, the converted files will be saved in a directory with the suffix `_webp` next to the source directory.
 
 ### Example Commands
 
@@ -40,6 +41,11 @@ This script is designed for batch conversion of TIFF files to WebP Lossless form
   python tiff2webp.py /path/to/directory
   ```
 
+- **Process Specific Directory with Custom Output Directory**:
+  ```bash
+  python tiff2webp.py /path/to/directory -o /custom/output/root
+  ```
+
 - **Process Directories from TXT File**:
   ```bash
   python tiff2webp.py directories.txt
@@ -47,7 +53,7 @@ This script is designed for batch conversion of TIFF files to WebP Lossless form
 
 ### Output
 
-- Converted WebP files are saved in a new directory with the suffix `_webp`.
+- Converted WebP files are saved in a new directory. If the `-o` option is used, this directory is created inside the specified output root directory with the same name as the source directory. Otherwise, it is created next to the source directory with the suffix `_webp`.
 - A log file `tiff2webp.log` is created to record the conversion process.
 - A summary report is displayed upon completion, including total files processed, time taken, average compression ratio, and space saved.
 
