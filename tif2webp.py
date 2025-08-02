@@ -130,13 +130,14 @@ def process_directory(tiff_dir, output_root=None, force_convert=False):
             total_compressed: Суммарный размер сконвертированных файлов (байты)
     """
     # Определяем путь для сохранения
+    base_name = os.path.basename(tiff_dir) + '_webp'  # Всегда добавляем суффикс
+    
     if output_root:
         # Создаем путь в указанной выходной директории
-        base_name = os.path.basename(tiff_dir)
         webp_dir = os.path.join(output_root, base_name)
     else:
         # Используем суффикс _webp рядом с исходным каталогом
-        webp_dir = f"{tiff_dir}_webp"
+        webp_dir = os.path.join(os.path.dirname(tiff_dir), base_name)
     
     # Создаем целевой каталог
     os.makedirs(webp_dir, exist_ok=True)
